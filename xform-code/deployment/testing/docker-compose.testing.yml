@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Main web application
+  bookstore-web:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    container_name: bookstore-web-testing
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Testing
+      - ASPNETCORE_URLS=http://+:8080
+      # Database configuration - AWS PostgreSQL
+      - ConnectionStrings__BookstoreDatabaseConnection=${ConnectionStrings__BookstoreDatabaseConnection}
+      # Service configurations
+      - Services__Authentication=local
+      - Services__Database=aws
+      - Services__FileService=aws
+      - Services__ImageValidationService=local
+      - Services__LoggingService=aws
+      # AWS Configuration
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      # File Service Configuration
+      - Files__BucketName=${Files__BucketName}
+      - Files__CloudFrontDomain=${Files__CloudFrontDomain}
+      # Logging Configuration
+      - Logging__CloudWatch__LogGroup=${Logging__CloudWatch__LogGroup:-/aws/bookstore/testing}
+      - Logging__CloudWatch__Region=${AWS_REGION:-us-east-1}
+    volumes:
+      # Mount local directory for file uploads (fallback/cache)
+      - bookstore-uploads:/app/wwwroot/uploads
+      # Mount logs directory
+      - bookstore-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - bookstore-network
+
+  # Optional: Local PostgreSQL for development/testing without AWS
+  # Uncomment if you want to test locally before deploying to AWS
+  # postgres-local:
+  #   image: postgres:16
+  #   container_name: bookstore-postgres-local
+  #   environment:
+  #     POSTGRES_DB: bookstore
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-local-data:/var/lib/postgresql/data
+  #     - ../../deployment/testing/migrations:/docker-entrypoint-initdb.d:ro
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - bookstore-network
+
+volumes:
+  bookstore-uploads:
+    driver: local
+  bookstore-logs:
+    driver: local
+  # postgres-local-data:
+  #   driver: local
+
+networks:
+  bookstore-network:
+    driver: bridge
