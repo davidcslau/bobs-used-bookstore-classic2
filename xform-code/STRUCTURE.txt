@@ -1,0 +1,176 @@
+xform-code/
+│
+├── app/                                    # Transformed application code
+│   ├── Bookstore.Common/                  # ✓ .NET 8.0
+│   │   ├── Bookstore.Common.csproj        # SDK-style, net8.0
+│   │   └── Constants.cs
+│   │
+│   ├── Bookstore.Domain/                  # ✓ .NET 8.0
+│   │   ├── Bookstore.Domain.csproj        # SDK-style, net8.0
+│   │   ├── Addresses/
+│   │   ├── Books/
+│   │   ├── Carts/
+│   │   ├── Customers/
+│   │   ├── Offers/
+│   │   ├── Orders/
+│   │   ├── ReferenceData/
+│   │   ├── IFileService.cs                # Updated for nullable
+│   │   ├── IImageResizeService.cs
+│   │   └── IImageValidationService.cs
+│   │
+│   ├── Bookstore.Data/                    # ✓ EF Core 8.0, PostgreSQL
+│   │   ├── Bookstore.Data.csproj          # EF Core, Npgsql
+│   │   ├── ApplicationDbContext.cs        # ✓ EF Core DbContext
+│   │   ├── BookstoreDbInitializer.cs      # ✓ Async seeding
+│   │   ├── BookstoreConfiguration.cs      # ✓ IConfiguration-based
+│   │   ├── PaginatedList.cs               # ✓ EF Core ToListAsync
+│   │   ├── Repositories/                  # ✓ All updated for EF Core
+│   │   │   ├── AddressRepository.cs
+│   │   │   ├── BookRepository.cs
+│   │   │   ├── CustomerRepository.cs
+│   │   │   ├── OfferRepository.cs
+│   │   │   ├── OrderRepository.cs
+│   │   │   ├── ReferenceDataRepository.cs
+│   │   │   └── ShoppingCartRepository.cs
+│   │   ├── FileServices/
+│   │   │   ├── LocalFileService.cs        # ✓ Cross-platform paths
+│   │   │   └── S3FileService.cs
+│   │   ├── ImageResizeService/
+│   │   │   └── ImageResizeService.cs
+│   │   └── ImageValidationServices/
+│   │       ├── LocalImageValidationService.cs
+│   │       └── RekognitionImageValidationService.cs
+│   │
+│   ├── Bookstore.Web/                     # ✓ ASP.NET Core 8.0 MVC
+│   │   ├── Bookstore.Web.csproj           # SDK-style, Microsoft.NET.Sdk.Web
+│   │   ├── Program.cs                     # ✓ NEW - Replaces Global.asax + Startup
+│   │   ├── appsettings.json               # ✓ NEW - Base config
+│   │   ├── appsettings.Development.json   # ✓ NEW - Dev config
+│   │   ├── appsettings.Testing.json       # ✓ NEW - Testing config (as specified)
+│   │   ├── nlog.config                    # ✓ NEW - NLog for ASP.NET Core
+│   │   ├── Controllers/                   # ✓ Updated using statements
+│   │   ├── Views/                         # Razor views (mostly compatible)
+│   │   ├── wwwroot/                       # ✓ Static files (was Content/)
+│   │   │   ├── css/
+│   │   │   ├── images/
+│   │   │   ├── js/
+│   │   │   └── lib/
+│   │   ├── Helpers/
+│   │   │   ├── LocalAuthenticationMiddleware.cs  # ✓ ASP.NET Core middleware
+│   │   │   └── ...
+│   │   └── ViewModel/
+│   │
+│   └── Bookstore.Cdk/                     # ✓ .NET 8.0
+│       ├── Bookstore.Cdk.csproj           # Updated to net8.0
+│       └── ... (CDK infrastructure code)
+│
+├── migrations/                             # Database migration guides
+│   └── migration-notes.md                 # ✓ SQL Server to PostgreSQL guide
+│
+├── Dockerfile                              # ✓ NEW - Multi-stage .NET 8 build
+├── docker-compose.yml                      # ✓ NEW - PostgreSQL + App
+├── .dockerignore                           # ✓ NEW - Build optimization
+├── BobsBookstoreClassic.sln                # Solution file
+│
+└── Documentation/
+    ├── README.md                           # ✓ Comprehensive guide
+    ├── QUICK_START.md                      # ✓ Quick reference
+    ├── TRANSFORMATION_SUMMARY.md           # ✓ Detailed changes
+    ├── VALIDATION_CHECKLIST.md             # ✓ Testing procedures
+    ├── DELIVERY_SUMMARY.txt                # ✓ Executive summary
+    └── STRUCTURE.txt                       # ✓ This file
+
+================================================================================
+KEY TRANSFORMATIONS LEGEND
+================================================================================
+
+✓ = Completed
+NEW = New file created for .NET Core
+Updated = Existing file modified for .NET Core
+
+================================================================================
+PROJECT FILE CHANGES
+================================================================================
+
+BEFORE (.NET Framework 4.8):
+- Old-style .csproj with ItemGroups
+- packages.config for NuGet
+- AssemblyInfo.cs for metadata
+- <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+
+AFTER (.NET 8.0):
+- SDK-style .csproj
+- PackageReference in .csproj
+- Auto-generated assembly info
+- <TargetFramework>net8.0</TargetFramework>
+
+================================================================================
+WEB APPLICATION CHANGES
+================================================================================
+
+REMOVED:
+- Global.asax / Global.asax.cs
+- Startup.cs (OWIN)
+- Web.config
+- App_Start/ directory
+- packages.config
+
+ADDED:
+- Program.cs
+- appsettings.json
+- appsettings.Development.json
+- appsettings.Testing.json
+- nlog.config
+
+MOVED:
+- Content/ → wwwroot/
+- Scripts/ → wwwroot/scripts/
+
+================================================================================
+DATABASE LAYER CHANGES
+================================================================================
+
+PACKAGE CHANGES:
+- EntityFramework 6.5.1 → Microsoft.EntityFrameworkCore 8.0.0
+- Added: Npgsql.EntityFrameworkCore.PostgreSQL 8.0.0
+
+CODE CHANGES:
+- using System.Data.Entity → using Microsoft.EntityFrameworkCore
+- DbContext constructor: string → DbContextOptions<T>
+- ModelBuilder: DbModelBuilder → ModelBuilder
+- Include("Name") → Include(x => x.Name)
+- HasRequired → HasOne
+- WillCascadeOnDelete → OnDelete(DeleteBehavior)
+
+================================================================================
+AUTHENTICATION CHANGES
+================================================================================
+
+BEFORE:
+- OWIN middleware pipeline
+- Microsoft.Owin.Security.*
+- IOwinContext
+- HttpContext.Current
+
+AFTER:
+- ASP.NET Core middleware
+- Microsoft.AspNetCore.Authentication.*
+- HttpContext (injected)
+- IHttpContextAccessor
+
+================================================================================
+FILE COUNT SUMMARY
+================================================================================
+
+Project Files:           5 .csproj files
+Source Files:            ~150 .cs files
+Configuration Files:     3 appsettings.json + 1 nlog.config
+Docker Files:            2 (Dockerfile, docker-compose.yml)
+Documentation Files:     6 markdown/text files
+Migration Guides:        1 database migration guide
+
+Total Files Modified:    ~170 files
+
+================================================================================
+END OF STRUCTURE DOCUMENTATION
+================================================================================
